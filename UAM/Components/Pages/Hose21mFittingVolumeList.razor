@@ -1,0 +1,152 @@
+﻿@page "/"
+@using UAM.Models
+@using UAM.Services
+@using Microsoft.AspNetCore.Antiforgery;
+@rendermode InteractiveServer
+@attribute [RequireAntiforgeryToken]
+@inject NavigationManager NavigationManager
+@code {
+    [Inject]
+    public IHose21mFittingVolumeServices Hose21mFittingVolumeServices { get; set; }
+}
+
+<h1>Hose 21m Fitting Volume</h1>
+
+
+@if (Hose21mFittingVolume == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+  
+    <EditForm Model="@objHose21mFittingVolume" OnSubmit="@CreateHose21mFittingVolume" FormName="frmHose21mFittingVolume">
+    <table class='table'>
+        <thead>
+            <tr>
+
+                <th>Fitting</th>
+                <th>Fitting Volume(mm3)</th>
+                <th>Active</th>
+                <th> </th>
+            </tr>
+        </thead>
+        <tbody>
+
+            
+
+                <tr>
+
+                    <td> <InputText @bind-Value="objHose21mFittingVolume.Fitting" class="form-control" /></td>
+                    <td> <InputNumber @bind-Value="objHose21mFittingVolume.FittingVolume" class="form-control" /></td>
+
+                    <td>
+                        <InputCheckbox @bind-Value="objHose21mFittingVolume.isActive" class="form-check-input" />
+                        <label class="form-check-label" for="exampleCheck1">Is Active</label>
+                    </td>
+                    <td>
+                        <input type="submit" class="btn btn-primary" value="Save" />
+                    </td>
+                </tr>
+
+
+
+
+            @foreach (var hose21mFittingVolume in Hose21mFittingVolume)
+            {
+                if (hose21mFittingVolume.IsEditing)
+                {
+                    <tr>
+                        <td><input @bind="hose21mFittingVolume.Fitting" class="form-control" /></td>
+                            <td width="200"><input @bind="hose21mFittingVolume.FittingVolume" class="form-control" /></td>
+                            <td><input @bind="hose21mFittingVolume.isActive" type="checkbox" class="form-check-input" /></td>
+                            <td>
+                                <a href='javascript:void(0)' @onclick="()=>{EnableEditing(false,hose21mFittingVolume);UpdateInstance(hose21mFittingVolume);}">Save</a>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr>
+                            <td>@hose21mFittingVolume.Fitting</td>
+                            <td width="200">@hose21mFittingVolume.FittingVolume</td>
+                            <td>@hose21mFittingVolume.isActive</td>
+                            <td>
+                                <a href='javascript:void(0)' @onclick="()=>EnableEditing(true,hose21mFittingVolume)">Edit</a>
+                            </td>
+                        </tr>
+                    }
+
+            }
+        </tbody>
+    </table>
+    </EditForm>
+
+    <nav aria-label="...">
+        <ul class="pagination pagination-sm">
+            
+            @for(int i=1;i<pagination.PageCount;i++)
+            {
+                object pn = i;
+                if(i==pagination.CurrentPage)
+                {
+                    <li @onclick="()=>OnPageChange(pn)" class="page-item active" aria-current="page">
+                        <span class="page-link">@i</span>
+                    </li>
+                }
+                else
+                {
+                    <li @onclick="()=>OnPageChange(pn)" class="page-item"><a class="page-link" href="javascript:void(0)">@i</a></li>
+                }
+            }
+           
+           
+            
+        </ul>
+    </nav>
+
+}
+@code {
+
+    List<Hose21mFittingVolume> Hose21mFittingVolume;
+    [SupplyParameterFromForm]
+    Hose21mFittingVolume objHose21mFittingVolume { get; set; } = new Hose21mFittingVolume();
+
+    Pagination pagination;
+
+    protected async Task CreateHose21mFittingVolume()
+    {
+
+        await Hose21mFittingVolumeServices.AddHose21mFittingVolume(objHose21mFittingVolume);
+        Hose21mFittingVolume = (await Hose21mFittingVolumeServices.GetHose21mFittingVolume()).ToList();
+        //NavigationManager.NavigateTo("Employees");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (pagination == null)
+            pagination = await Hose21mFittingVolumeServices.GetPagination();
+        Hose21mFittingVolume = (await Hose21mFittingVolumeServices.GetHose21mFittingVolume(pagination.CurrentPage)).ToList();
+    }
+
+    private async Task OnPageChange(object pageNo)
+    {
+        if (pagination != null)
+            pagination.CurrentPage = (int) pageNo;
+        Hose21mFittingVolume = (await Hose21mFittingVolumeServices.GetHose21mFittingVolume(pagination.CurrentPage)).ToList();
+    }
+
+    private void EnableEditing(bool flag, Hose21mFittingVolume instanceData)
+    {
+        instanceData.IsEditing = flag;
+    }
+
+    private void UpdateInstance(Hose21mFittingVolume instanceData)
+    {
+        EnableEditing(false, instanceData);
+
+        //call the repository to update the instance here.
+        //show toast after done.
+    }
+
+}
